@@ -66,15 +66,16 @@ class Bird(pg.sprite.Sprite):
             (0, +1): pg.transform.rotozoom(img, -90, 1.0),  # 下
             (+1, +1): pg.transform.rotozoom(img, -45, 1.0),  # 右下
         }
+
         self.dire = (+1, 0)
         self.image = self.imgs[self.dire]
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 10
 
-
         self.state = "normal"  # 初期状態は通常状態
         self.hyper_life = -1
+
 
 
     def change_img(self, num: int, screen: pg.Surface):
@@ -98,14 +99,18 @@ class Bird(pg.sprite.Sprite):
         self.hyper_life = hyper_life
 
 
-
-
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
         押下キーに応じてこうかとんを移動させる
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
         """
+
+        if key_lst[pg.K_LSHIFT]:
+            self.speed = 20
+        else:
+            self.speed = 10
+
         sum_mv = [0, 0]
         for k, mv in __class__.delta.items():
             if key_lst[k]:
@@ -119,6 +124,7 @@ class Bird(pg.sprite.Sprite):
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
+
 
         if self.state == "hyper":
             self.hyper_life -= 1
@@ -255,6 +261,13 @@ class Enemy(pg.sprite.Sprite):
 
 
 
+    def get_direction(self) -> tuple[int, int]:
+        return self.get_direction
+    def toggle_high_speed_mode(self):
+        self.high_speed_mode = not self.high_speed_mode
+
+
+
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
@@ -264,8 +277,8 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.score = 0
 
+        self.score = 0
 
         self.image = self.font.render(f"Score: {self.score}", 0, self.color)
         self.rect = self.image.get_rect()
@@ -322,10 +335,12 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
 
+
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
                 if score.score >= 10:
                     neo.add(NeoGravity(400))
                     score.score_up(-10)            
+
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT and score.score >= 100:
                     bird.change_state("hyper",500)
                     score.score -=100
@@ -351,7 +366,9 @@ def main():
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
 
-        for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
+
+        for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():#複数の衝突判定
+
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
             
@@ -385,8 +402,7 @@ def main():
                 score.update(screen)
                 pg.display.update()
              
-            
-        
+
 
         bird.update(key_lst, screen)
         beams.update()
